@@ -1,0 +1,40 @@
+RAHMEN-GEHEIMHALTUNGSVEREINBARUNG & LIEFERANTEN-VERTRAG (NDA / MSA)
+Vertragsnummer: VTR-2026-APEX-099
+Datum: 15. Januar 2026
+
+ZWISCHEN:
+1. ApexTech Mobility Systems GmbH, Siemensstraße 42, 70178 Stuttgart, Deutschland
+   - nachfolgend "Auftraggeber" oder "Partei A" genannt -
+UND
+2. Nordic Automotive Systems AB, Kungsgatan 14, 41119 Göteborg, Schweden
+   - nachfolgend "Lieferant" oder "Partei B" genannt -
+
+PRÄAMBEL:
+Die Parteien beabsichtigen eine strategische Zusammenarbeit im Bereich der Entwicklung, Produktion und Zulieferung von mikroprozessorgesteuerten elektro-pneumatischen Bremsventilen (EBS) für Nutzfahrzeuge. Im Rahmen dieser Kooperation werden vertrauliche technische Konstruktionspläne, Quellcodes und kaufmännische Preiskalkulationen ausgetauscht.
+
+§ 1 GEGENSTAND & DEFINITION VERTRAULICHER INFORMATIONEN
+(1) Vertrauliche Informationen im Sinne dieser Vereinbarung sind sämtliche technischen Daten, CAD-Zeichnungen, Firmware-Binaries, Fertigungstoleranzen, Preise, Einkaufskonditionen und strategischen Lieferantenlisten, die von einer Partei der anderen Partei schriftlich, elektronisch oder mündlich offengelegt werden.
+(2) Ausgenommen sind Informationen, die nachweislich vor der Offenlegung der empfangenden Partei bereits bekannt waren oder ohne Vertragsverletzung öffentlich zugänglich geworden sind.
+
+§ 2 GEHEIMHALTUNGSPFLICHTEN & IT-SICHERHEIT
+(1) Die empfangende Partei verpflichtet sich, alle vertraulichen Informationen streng geheim zu halten und dieselbe Sorgfalt anzuwenden wie für eigene Betriebsgeheimnisse, mindestens jedoch die Sorgfalt eines ordentlichen Kaufmanns.
+(2) Der Zugriff ist strikt auf Mitarbeiter zu beschränken, die diesen zur Erfüllung des Vertragszwecks zwingend benötigen ("Need-to-Know"-Prinzip).
+(3) Jede Speicherung auf externen Public-Cloud-Diensten ohne vorherige schriftliche Zustimmung der Partei A ist ausdrücklich untersagt. Die Verarbeitung muss nachweislich DSGVO-konform und ISO/IEC 27001 zertifiziert erfolgen.
+
+§ 3 VERTRAGSSTRAFE & PÖNALEN (RISIKOKLAUSEL)
+(1) Für jeden einzelnen schuldhaften Verstoß gegen die Bestimmungen dieser Vereinbarung (insbesondere bei unbefugter Weitergabe von Konstruktionsdaten an Dritte) verpflichtet sich die verletzende Partei zur Zahlung einer verschuldensunabhängigen Vertragsstrafe in Höhe von pauschal 250.000,00 EUR (in Worten: zweihundertfünfzigtausend Euro).
+(2) Die Geltendmachung eines weitergehenden Schadensersatzanspruches bleibt der geschädigten Partei ausdrücklich vorbehalten. Die gezahlte Vertragsstrafe wird auf etwaige Schadensersatzansprüche nicht angerechnet.
+
+§ 4 HAFTUNGSBESCHRÄNKUNG & FOLGESCHÄDEN (RISIKOKLAUSEL)
+(1) Die Parteien vereinbaren, dass bei Verletzung wesentlicher Vertragspflichten (Kardinalpflichten) die Haftung für mittelbare Schäden, Produktionsstillstand, entgangenen Gewinn und Bandstillstandskosten beim Endkunden (OEM) unbeschränkt gilt.
+(2) Eine Haftungshöchstgrenze (Liability Cap) wird für Lieferausfälle und Serienfehler ausdrücklich ausgeschlossen.
+
+§ 5 LAUFZEIT & KÜNDIGUNG
+(1) Diese Vereinbarung tritt mit Unterzeichnung durch beide Parteien in Kraft und wird für eine feste Grundlaufzeit von 5 (fünf) Jahren geschlossen.
+(2) Eine ordentliche Kündigung während der Grundlaufzeit ist ausgeschlossen. Nach Ablauf der Grundlaufzeit kann der Vertrag mit einer Frist von 12 (zwölf) Monaten zum Ende eines Kalenderjahres gekündigt werden.
+(3) Die Pflicht zur Geheimhaltung vertraulicher technischer Entwicklungsdaten überdauert das Vertragsende um weitere 10 (zehn) Jahre.
+
+§ 6 SCHLUSSBESTIMMUNGEN & ANWENDBARES RECHT
+(1) Es gilt ausschließlich das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG).
+(2) Ausschließlicher Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit dieser Vereinbarung ist Stuttgart, Deutschland.
+(3) Sollten einzelne Bestimmungen dieses Vertrages unwirksam sein, bleibt die Wirksamkeit der übrigen Bestimmungen unberührt.

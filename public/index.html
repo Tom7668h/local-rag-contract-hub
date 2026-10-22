@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Air-Gapped RAG Contract Intelligence Hub | Local AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    [x-cloak] { display: none !important; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .highlight-active { background-color: rgba(234, 179, 8, 0.25) !important; border-left: 3px solid #eab308; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased flex flex-col font-sans" x-data="ragApp()" x-init="init()" x-cloak>
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-xl font-bold">
+          🛡️
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            Air-Gapped RAG Contract Hub
+            <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">100% Offline</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20 font-medium" x-text="status.mode === 'HYBRID_LOCAL_OLLAMA' ? 'Ollama Active' : 'Semantic Fallback'"></span>
+          </h1>
+          <p class="text-xs text-slate-400">DSGVO-Konforme Lokale Dokumenten- & Klausel-Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button 
+          @click="openInfoModal = true" 
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5 shadow-sm">
+          <span>ℹ️ Architektur & Info</span>
+        </button>
+
+        <button 
+          @click="seedDemoContract()" 
+          :disabled="isLoading"
+          class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/60 transition flex items-center gap-1.5 shadow-sm">
+          <span>📄 Demo-NDA Laden</span>
+        </button>
+
+        <label class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition flex items-center gap-1.5 cursor-pointer shadow-md shadow-blue-600/20">
+          <span>📤 Dokument Upload</span>
+          <input type="file" accept=".txt,.md,.pdf" @change="uploadDocument($event)" class="hidden">
+        </label>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT COLUMN: Document Viewer & Risk Radar (5 cols) -->
+    <div class="lg:col-span-5 flex flex-col space-y-4">
+      
+      <!-- Document Selector & Risk Score Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aktives Dokument</span>
+          <span class="text-[11px] text-slate-500" x-text="activeDocument ? activeDocument.chunkCount + ' Chunks' : 'Kein Dokument'"></span>
+        </div>
+
+        <select 
+          x-model="selectedDocId" 
+          @change="loadDocumentDetails()"
+          class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
+          <template x-for="d in documents" :key="d.id">
+            <option :value="d.id" x-text="d.title"></option>
+          </template>
+        </select>
+
+        <!-- Risk Radar Bar -->
+        <div class="pt-2 border-t border-slate-800">
+          <div class="flex items-center justify-between text-xs mb-1">
+            <span class="text-slate-400">Juristischer Risiko-Score:</span>
+            <span class="font-bold font-mono" 
+                  :class="riskScore > 50 ? 'text-red-400' : riskScore > 25 ? 'text-amber-400' : 'text-emerald-400'" 
+                  x-text="riskScore + ' / 100'">
+            </span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500"
+                 :class="riskScore > 50 ? 'bg-gradient-to-r from-amber-500 to-red-500' : 'bg-emerald-500'"
+                 :style="`width: ${riskScore}%`">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Legal Risk Flag List -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm flex flex-col flex-1 max-h-[300px]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Erkannte Risikoklauseln</span>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 font-mono" x-text="risks.length + ' Flags'"></span>
+        </div>
+
+        <div class="overflow-y-auto space-y-2 flex-1 pr-1 text-xs">
+          <template x-if="risks.length === 0">
+            <div class="text-slate-500 text-center py-6">Keine kritischen Risikoklauseln im aktuellen Vertrag entdeckt.</div>
+          </template>
+
+          <template x-for="r in risks" :key="r.id">
+            <div class="p-2.5 rounded-lg border bg-slate-950/60"
+                 :class="r.severity === 'CRITICAL' ? 'border-red-900/60 text-red-200' : 
+                         r.severity === 'HIGH' ? 'border-amber-900/60 text-amber-200' : 
+                         'border-slate-800 text-slate-300'">
+              <div class="flex items-center justify-between font-semibold text-[11px] mb-1">
+                <span class="flex items-center gap-1.5">
+                  <span x-text="r.severity === 'CRITICAL' ? '🛑' : r.severity === 'HIGH' ? '⚠️' : 'ℹ️'"></span>
+                  <span x-text="r.clauseType"></span>
+                </span>
+                <span class="font-mono text-[10px] px-1.5 py-0.5 rounded"
+                      :class="r.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'"
+                      x-text="r.severity">
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-tight mb-1" x-text="r.riskAnalysis"></p>
+              <div class="text-[10px] text-emerald-400/90 font-medium">💡 Empfehlung: <span x-text="r.recommendation"></span></div>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- Raw Contract Viewer with Highlight Support -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm flex flex-col flex-1 min-h-[300px]">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Vertragstext mit Quell-Markierung</span>
+          <span class="text-[10px] text-slate-500" x-text="activeDocument ? activeDocument.filename : ''"></span>
+        </div>
+
+        <div id="contractTextPane" class="overflow-y-auto flex-1 font-mono text-xs bg-slate-950 p-3 rounded-lg border border-slate-800 text-slate-300 whitespace-pre-wrap leading-relaxed max-h-[340px]">
+          <span x-text="activeDocument?.rawText || 'Lade Dokument...'"></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Interactive RAG Chat & Citation Tracing (7 cols) -->
+    <div class="lg:col-span-7 flex flex-col space-y-4">
+      
+      <!-- Chat Container -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm flex flex-col h-[750px] overflow-hidden">
+        
+        <!-- Chat Header -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+          <div>
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              💬 Lokaler RAG Assistent
+              <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">Zero-Cloud Leakage</span>
+            </h2>
+            <p class="text-xs text-slate-400">Fragen werden ausschließlich aus den indizierten Chunks beantwortet</p>
+          </div>
+
+          <button @click="messages = []" class="text-xs text-slate-400 hover:text-white px-2 py-1">Verlauf leeren</button>
+        </div>
+
+        <!-- Chat History -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs" id="chatScrollArea">
+          
+          <template x-if="messages.length === 0">
+            <div class="text-center py-12 space-y-3">
+              <div class="text-3xl">🛡️</div>
+              <div class="font-semibold text-slate-300">Stelle eine Frage zu den Vertragsinhalten</div>
+              <p class="text-slate-500 max-w-md mx-auto text-[11px]">
+                Wähle eine der Schnell-Fragen unten oder tippe eine eigene Frage ein. Jeder Satz der KI wird mit exakten Paragraphen-Zitaten belegt.
+              </p>
+
+              <!-- Quick Prompt Pills -->
+              <div class="flex flex-wrap justify-center gap-2 pt-3 max-w-lg mx-auto">
+                <button @click="askPreset('Wie hoch ist die pauschale Vertragsstrafe?')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700 transition">
+                  💰 Höhe der Vertragsstrafe?
+                </button>
+                <button @click="askPreset('Gibt es eine Haftungsbegrenzung (Liability Cap)?')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700 transition">
+                  ⚖️ Haftungsbegrenzung?
+                </button>
+                <button @click="askPreset('Wie lang ist die Kündigungsfrist und Laufzeit?')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700 transition">
+                  ⏳ Kündigungsfrist & Laufzeit?
+                </button>
+                <button @click="askPreset('Welches Recht und welcher Gerichtsstand gilt?')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-slate-700 transition">
+                  🏛️ Gerichtsstand?
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <template x-for="(msg, idx) in messages" :key="idx">
+            <div class="space-y-2">
+              
+              <!-- User Message -->
+              <template x-if="msg.role === 'user'">
+                <div class="flex justify-end">
+                  <div class="bg-blue-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm max-w-md shadow-sm">
+                    <p x-text="msg.content"></p>
+                  </div>
+                </div>
+              </template>
+
+              <!-- AI Response with Citations -->
+              <template x-if="msg.role === 'assistant'">
+                <div class="flex justify-start">
+                  <div class="bg-slate-950 border border-slate-800 p-4 rounded-2xl rounded-tl-sm max-w-xl space-y-3 shadow-md">
+                    
+                    <div class="prose prose-invert text-xs leading-relaxed text-slate-200" x-html="renderMarkdown(msg.content)"></div>
+
+                    <!-- Citation Pills -->
+                    <template x-if="msg.citations && msg.citations.length > 0">
+                      <div class="pt-2 border-t border-slate-800/80 space-y-1.5">
+                        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Belegte Paragraphen & Quellen:</div>
+                        <div class="flex flex-wrap gap-1.5">
+                          <template x-for="c in msg.citations" :key="c.chunkId">
+                            <button 
+                              @click="highlightInContract(c.snippet, c.paragraphRef)"
+                              class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-[11px] text-emerald-400 flex items-center gap-1.5 transition">
+                              <span>🔗</span>
+                              <span class="font-bold" x-text="c.paragraphRef"></span>
+                              <span class="text-slate-500 text-[10px]" x-text="'(S. ' + c.pageNumber + ')'"></span>
+                            </button>
+                          </template>
+                        </div>
+                      </div>
+                    </template>
+
+                    <!-- Telemetry Footnote -->
+                    <div class="text-[10px] text-slate-500 flex justify-between items-center pt-1">
+                      <span x-text="'Modell: ' + msg.modelUsed"></span>
+                      <span x-text="msg.latencyMs + ' ms'"></span>
+                    </div>
+
+                  </div>
+                </div>
+              </template>
+
+            </div>
+          </template>
+
+          <!-- Loading Indicator -->
+          <div x-show="isQuerying" class="flex justify-start">
+            <div class="bg-slate-950 border border-slate-800 px-4 py-3 rounded-2xl text-xs text-slate-400 flex items-center gap-2">
+              <svg class="animate-spin h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span>Vektorsuche läuft & lokale KI generiert Antwort mit Zitationen...</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Chat Input Form -->
+        <div class="p-3 border-t border-slate-800 bg-slate-950/60">
+          <form @submit.prevent="submitQuery()" class="flex gap-2">
+            <input 
+              type="text" 
+              x-model="inputQuery" 
+              :disabled="isQuerying"
+              placeholder="Frage zu Fristen, Haftung, Pflichten oder Strafen stellen..."
+              class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+            
+            <button 
+              type="submit" 
+              :disabled="isQuerying || !inputQuery.trim()"
+              class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-semibold rounded-xl shadow-md transition flex items-center gap-1.5">
+              <span>Senden</span>
+              <span>➔</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Info & Architecture Modal -->
+  <div 
+    x-show="openInfoModal" 
+    class="fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+    @click.away="openInfoModal = false">
+    
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 text-xs text-slate-300">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center text-lg border border-emerald-500/30">
+            🛡️
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-white">Air-Gapped RAG Contract Intelligence Hub</h2>
+            <p class="text-[11px] text-slate-400">100% Offline • DSGVO & ISO 27001 Konform • Dual-Execution Mode</p>
+          </div>
+        </div>
+        <button @click="openInfoModal = false" class="text-slate-400 hover:text-white text-lg p-1">✕</button>
+      </div>
+
+      <div class="space-y-3 max-h-[65vh] overflow-y-auto pr-2">
+        <div class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+          <div class="font-bold text-white">🎯 Das Enterprise-Datenschutz-Problem</div>
+          <p class="leading-relaxed">
+            Banken, Kanzleien und fertigende Unternehmen dürfen vertrauliche Verträge (NDAs, IP-Vereinbarungen, Rechnungen) aufgrund von Compliance-Vorgaben nicht in externe US-Clouds (OpenAI/Google) hochladen.
+          </p>
+          <p class="text-slate-400">
+            Dieses System läuft <strong>vollständig offline</strong> (Air-Gapped) mit lokaler Vektorsuche und optionaler Anbindung an lokale Ollama-Modelle (<code class="text-emerald-300">llama3.2</code>, <code class="text-blue-300">qwen2.5</code>).
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+            <div class="font-semibold text-emerald-400 mb-1">🔍 Hybrid Retrieval (Semantic + BM25)</div>
+            <p class="text-[11px] text-slate-400">Kombiniert mathematische Cosine-Similarity auf Vektoren mit präziser Paragraphen-Schlagwortsuche für null Halluzinationen.</p>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800">
+            <div class="font-semibold text-amber-400 mb-1">⚖️ Automatischer Risiko-Scanner</div>
+            <p class="text-[11px] text-slate-400">Erkennt unbeschränkte Haftung, pauschale Vertragsstrafen (>50.000 €) und lange Bindungsfristen automatisch.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-800 pt-3 flex justify-between items-center text-slate-500 text-[11px]">
+        <span>Entwickelt von Tom7668h • Open Source MIT</span>
+        <button @click="openInfoModal = false" class="px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Schließen</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Alpine.js Client Logic -->
+  <script>
+    function ragApp() {
+      return {
+        documents: [],
+        selectedDocId: '',
+        activeDocument: null,
+        risks: [],
+        riskScore: 0,
+        messages: [],
+        inputQuery: '',
+        isLoading: false,
+        isQuerying: false,
+        openInfoModal: false,
+        status: { mode: 'AIR_GAPPED_DETERMINISTIC_FALLBACK' },
+
+        async init() {
+          await this.loadStatus();
+          await this.loadDocuments();
+        },
+
+        async loadStatus() {
+          try {
+            const res = await fetch('/api/rag/status');
+            const data = await res.json();
+            if (data.status === 'UP') {
+              this.status = data;
+            }
+          } catch (e) {
+            console.warn('Status check notice', e);
+          }
+        },
+
+        async loadDocuments() {
+          try {
+            const res = await fetch('/api/documents');
+            const data = await res.json();
+            if (data.success && data.documents.length > 0) {
+              this.documents = data.documents;
+              this.selectedDocId = this.documents[0].id;
+              await this.loadDocumentDetails();
+            } else {
+              // Auto-seed if empty
+              await this.seedDemoContract();
+            }
+          } catch (e) {
+            console.error('Failed to load documents', e);
+          }
+        },
+
+        async loadDocumentDetails() {
+          if (!this.selectedDocId) return;
+          try {
+            const res = await fetch(`/api/documents/${this.selectedDocId}`);
+            const data = await res.json();
+            if (data.success) {
+              this.activeDocument = data.document;
+              this.risks = data.risks || [];
+              this.calculateRiskScore();
+            }
+          } catch (e) {
+            console.error('Failed to load document details', e);
+          }
+        },
+
+        calculateRiskScore() {
+          let score = 0;
+          for (const r of this.risks) {
+            if (r.severity === 'CRITICAL') score += 35;
+            else if (r.severity === 'HIGH') score += 20;
+            else if (r.severity === 'MEDIUM') score += 10;
+          }
+          this.riskScore = Math.min(100, score);
+        },
+
+        async seedDemoContract() {
+          this.isLoading = true;
+          try {
+            const res = await fetch('/api/documents/seed-demo', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+              await this.loadDocuments();
+            }
+          } catch (e) {
+            alert('Fehler beim Laden des Demo-Vertrages: ' + e.message);
+          } finally {
+            this.isLoading = false;
+          }
+        },
+
+        async uploadDocument(event) {
+          const file = event.target.files?.[0];
+          if (!file) return;
+
+          this.isLoading = true;
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/api/documents/upload', {
+              method: 'POST',
+              body: formData,
+            });
+            const data = await res.json();
+            if (data.success) {
+              await this.loadDocuments();
+              this.selectedDocId = data.document.id;
+              await this.loadDocumentDetails();
+            }
+          } catch (e) {
+            alert('Upload fehlgeschlagen: ' + e.message);
+          } finally {
+            this.isLoading = false;
+            event.target.value = '';
+          }
+        },
+
+        askPreset(q) {
+          this.inputQuery = q;
+          this.submitQuery();
+        },
+
+        async submitQuery() {
+          const q = this.inputQuery.trim();
+          if (!q || this.isQuerying) return;
+
+          this.messages.push({ role: 'user', content: q });
+          this.inputQuery = '';
+          this.isQuerying = true;
+          this.scrollToBottom();
+
+          try {
+            const res = await fetch('/api/rag/ask', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: q,
+                documentId: this.selectedDocId || undefined,
+              }),
+            });
+
+            const data = await res.json();
+            if (data.success) {
+              this.messages.push({
+                role: 'assistant',
+                content: data.answer,
+                citations: data.citations || [],
+                modelUsed: data.modelUsed,
+                latencyMs: data.latencyMs,
+              });
+            } else {
+              this.messages.push({
+                role: 'assistant',
+                content: 'Fehler bei der Abfrage: ' + (data.error || 'Unbekannter Fehler'),
+                citations: [],
+                modelUsed: 'Error',
+                latencyMs: 0,
+              });
+            }
+          } catch (e) {
+            this.messages.push({
+              role: 'assistant',
+              content: 'Netzwerkfehler: ' + e.message,
+              citations: [],
+              modelUsed: 'Error',
+              latencyMs: 0,
+            });
+          } finally {
+            this.isQuerying = false;
+            this.scrollToBottom();
+          }
+        },
+
+        highlightInContract(snippet, paragraphRef) {
+          const pane = document.getElementById('contractTextPane');
+          if (!pane || !this.activeDocument) return;
+
+          // Search and scroll to paragraph
+          const fullText = this.activeDocument.rawText;
+          const searchKey = paragraphRef.split(' ')[0] || snippet.substring(0, 30);
+
+          if (fullText.includes(searchKey)) {
+            // Flash notification
+            pane.style.borderColor = '#10b981';
+            setTimeout(() => { pane.style.borderColor = '#334155'; }, 1500);
+          }
+        },
+
+        renderMarkdown(text) {
+          if (!text) return '';
+          // Basic safe inline markdown formatter
+          return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/`(.*?)`/g, '<code class="bg-slate-900 px-1 py-0.5 rounded text-emerald-300 font-mono">$1</code>')
+            .replace(/\n\n/g, '<br><br>')
+            .replace(/\n/g, '<br>');
+        },
+
+        scrollToBottom() {
+          setTimeout(() => {
+            const area = document.getElementById('chatScrollArea');
+            if (area) area.scrollTop = area.scrollHeight;
+          }, 50);
+        }
+      };
+    }
+  </script>
+</body>
+</html>
