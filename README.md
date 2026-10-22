@@ -65,27 +65,29 @@ flowchart TD
 
 ---
 
-### 🚀 Schnellstart
+### 🚀 Schnellstart & Installation
 
 #### Voraussetzungen
 - Node.js 20+ (LTS)
 - *(Optional)* [Ollama](https://ollama.com/) lokal gestartet (z.B. mit `ollama run llama3.2` oder `llama3:instruct`)
 
-#### Installation & Ausführung
+#### 1. Repository klonen & Abhängigkeiten installieren
 ```powershell
-# 1. Repository klonen & Abhängigkeiten installieren
 git clone https://github.com/Tom7668h/local-rag-contract-hub.git
 cd local-rag-contract-hub
 npm install
-
-# 2. Server starten (Web-UI auf Port 3002)
-npm start
-
-# 3. Tests ausführen
-npm test
 ```
 
+#### 2. Server starten (Web-UI auf Port 3002)
+```powershell
+npm start
+```
 Dashboard im Browser öffnen: 👉 **http://localhost:3002**
+
+#### 3. Automatisierte Tests ausführen
+```powershell
+npm test
+```
 
 ---
 
@@ -101,6 +103,25 @@ Dashboard im Browser öffnen: 👉 **http://localhost:3002**
 | `GET` | `/api/rag/status` | Status der lokalen Ollama-KI-Verbindung |
 
 ---
+
+### 🧪 Test-Verifikation
+```powershell
+npm test
+```
+```text
+ ✓ tests/unit/document-parser.test.ts  (3 tests)
+ ✓ tests/unit/risk-analyzer.test.ts    (3 tests)
+ ✓ tests/unit/vector-store.test.ts     (2 tests)
+ ✓ tests/integration/rag-api.test.ts   (3 tests)
+
+ Test Files  4 passed (4)
+      Tests  11 passed (11)
+```
+
+---
+
+### 📄 Lizenz
+MIT-Lizenz. Erstellt von [Tom7668h](https://github.com/Tom7668h).
 
 <br><br>
 
@@ -127,6 +148,29 @@ This hub provides a sovereign, local AI command center:
 
 ---
 
+### 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    Contract["Confidential Contract (NDA / PDF / Text)"] --> Parser["DocumentParser (Paragraph & Token Splitter)"]
+    Parser --> Chunks["Semantic Chunks + Paragraph References"]
+    Chunks --> Embedder["Local Embedding Engine (Ollama / 64D Vector)"]
+    Embedder --> VectorDB[("SQLite Vector Store (Cosine Similarity)")]
+
+    UserQuery["Legal Query (e.g. Liability Cap?)"] --> HybridSearch["Hybrid Search Engine (Semantic + BM25)"]
+    VectorDB --> HybridSearch
+    HybridSearch --> TopK["Ranked Top-K Context Chunks"]
+    TopK --> Augmenter["Context Prompt Augmenter"]
+    Augmenter --> LocalLLM{"Local Ollama LLM Available?"}
+    LocalLLM -->|Yes| Ollama["Ollama (Llama 3.2 / Qwen 2.5)"]
+    LocalLLM -->|No / Offline| Fallback["Deterministic Semantic Synthesizer"]
+    Ollama --> Response["Response with Verifiable Source Citations"]
+    Fallback --> Response
+    Response --> UI["Glassmorphic Contract Dashboard"]
+```
+
+---
+
 ### ✨ Key Features
 
 - **🔒 100% Offline & Private:** Zero external API calls, zero telemetry, everything is indexed and queried locally using SQLite.
@@ -136,27 +180,42 @@ This hub provides a sovereign, local AI command center:
 
 ---
 
-### 🚀 Quickstart
+### 🚀 Quickstart & Installation
 
 #### Prerequisites
 - Node.js 20+ (LTS)
-- *(Optional)* [Ollama](https://ollama.com/) running locally (e.g. `ollama run llama3.2`)
+- *(Optional)* [Ollama](https://ollama.com/) running locally (e.g. `ollama run llama3.2` or `llama3:instruct`)
 
-#### Installation & Launch
+#### 1. Clone Repository & Install Dependencies
 ```bash
-# 1. Clone & install dependencies
 git clone https://github.com/Tom7668h/local-rag-contract-hub.git
 cd local-rag-contract-hub
 npm install
+```
 
-# 2. Start server (Dashboard on port 3002)
+#### 2. Start Server (Web UI on port 3002)
+```bash
 npm start
+```
+Open dashboard in browser: 👉 **http://localhost:3002**
 
-# 3. Run automated tests
+#### 3. Run Automated Tests
+```bash
 npm test
 ```
 
-Open dashboard in browser: 👉 **http://localhost:3002**
+---
+
+### 📡 REST API Endpoints
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/health` | Server health check & database connection status |
+| `GET` | `/api/documents` | List of all indexed contracts and documents |
+| `GET` | `/api/documents/:id` | Document details with paragraphs and risk profile |
+| `POST` | `/api/documents/ingest` | Upload, parse, and vectorize a new document |
+| `POST` | `/api/rag/query` | Legal RAG query returning answers with citation tags |
+| `GET` | `/api/rag/status` | Connection status to local Ollama LLM |
 
 ---
 
@@ -177,4 +236,4 @@ npm test
 ---
 
 ### 📄 License
-MIT © Tom7668h
+MIT License. Created by [Tom7668h](https://github.com/Tom7668h).
